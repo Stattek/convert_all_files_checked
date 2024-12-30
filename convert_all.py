@@ -1,3 +1,4 @@
+#!usr/bin/env python
 import os, sys, subprocess
 
 
@@ -35,6 +36,22 @@ def fix_path(path):
     return new_path
 
 
+def fix_file_extension(file_extension):
+    """Fixes a file extension for use with ffmpeg.
+
+    Args:
+        file_extension (str): The file extension string.
+
+    Returns:
+        str: The fixed file extension.
+    """
+    output = ""
+    if not file_extension.startswith("."):
+        output += "."
+    output += file_extension
+    return output
+
+
 def main():
     the_args = sys.argv
     if len(the_args) != 5:
@@ -49,8 +66,10 @@ def main():
     dst_path = fix_path(dst_path)
     print("+ Dst path:", dst_path)
     src_file_extension = get_formatted_name(the_args[3])
+    src_file_extension = fix_file_extension(src_file_extension)
     print("+ Src file extension:", src_file_extension)
     dst_file_extension = get_formatted_name(the_args[4])
+    dst_file_extension = fix_file_extension(dst_file_extension)
     print("+ Dst file extension:", dst_file_extension)
 
     print(
@@ -64,32 +83,33 @@ def main():
 
     files_to_convert = []
     # loop through source files
-    for file in os.listdir(src_path):
-        if file.endswith(src_file_extension):
+    for src_file_name in os.listdir(src_path):
+        if src_file_name.endswith(src_file_extension):
             # if we have a file that is of the extension we want, look to see
             # if there is already one in the destination folder
             already_exists = False
-            for inner_file in os.listdir(dst_path):
-                if inner_file.endswith(dst_file_extension):
+            for dst_file_name in os.listdir(dst_path):
+                if dst_file_name.endswith(dst_file_extension):
                     # change the outer file name to see if it matches this one
                     modified_name = (
-                        file[: file.rfind(src_file_extension)] + dst_file_extension
+                        src_file_name[: src_file_name.rfind(src_file_extension)]
+                        + dst_file_extension
                     )
 
-                    if modified_name == inner_file:
+                    if modified_name == dst_file_name:
                         already_exists = True
                         break
 
             # now check to do conversion
             if not already_exists:
-                files_to_convert.append(file)
+                files_to_convert.append(src_file_name)
             else:
-                print('+ "', file, '"', " already exists!", sep="")
+                print('+ "', src_file_name, '"', " already exists!", sep="")
 
     print("\n\n+ Files to convert:")
     print("+ [")
-    for file in files_to_convert:
-        print("+ \t", file, ",", sep="")
+    for src_file_name in files_to_convert:
+        print("+ \t", src_file_name, ",", sep="")
     print("+ ]")
 
     if len(files_to_convert) > 0:
@@ -97,17 +117,22 @@ def main():
     else:
         print("\n\n+ Nothing to convert!")
 
-    for file in files_to_convert:
-        src_file = get_formatted_name(file)
-        print("\n+ Converting", src_file, "...")
-        dst_file = ""
-        if file.endswith(src_file_extension):
+    for src_file_name in files_to_convert:
+        src_file_name = get_formatted_name(src_file_name)
+        print("\n+ Converting", src_file_name, "...")
+        dst_file_name = ""
+        if src_file_name.endswith(src_file_extension):
             # change the src file name
-            modified_name = file[: file.rfind(src_file_extension)] + dst_file_extension
-            dst_file = get_formatted_name(modified_name)
-            print("+ The Destination File:", dst_file)
+            modified_name = (
+                src_file_name[: src_file_name.rfind(src_file_extension)]
+                + dst_file_extension
+            )
+            dst_file_name = get_formatted_name(modified_name)
+            print("+ The Destination File:", dst_file_name)
 
-        command = "ffmpeg -i " + src_path + src_file + " " + dst_path + dst_file
+        command = (
+            "ffmpeg -i " + src_path + src_file_name + " " + dst_path + dst_file_name
+        )
         print("+ Command:", command)
         # Wait for this to finish executing
         subprocess.Popen(command, shell=True).wait()
