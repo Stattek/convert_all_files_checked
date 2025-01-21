@@ -123,11 +123,10 @@ def main():
         dst_file_name = ""
         if src_file_name.endswith(src_file_extension):
             # change the src file name
-            modified_name = (
+            dst_file_name = (
                 src_file_name[: src_file_name.rfind(src_file_extension)]
                 + dst_file_extension
             )
-            dst_file_name = get_formatted_name(modified_name)
             print("+ The Destination File:", dst_file_name)
 
         command = (
